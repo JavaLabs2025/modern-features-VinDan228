@@ -1,0 +1,928 @@
+openapi: 3.0.3
+info:
+  title: Lab4. Advanced Java
+  description: SOlution by Vinichenko Daniil
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /users:
+    get:
+      summary: Get all users
+      operationId: getAllUsers
+      tags:
+        - Users
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+    
+    post:
+      summary: Register new user
+      operationId: registerUser
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /users/{login}:
+    get:
+      summary: Get user by login
+      operationId: getUserByLogin
+      tags:
+        - Users
+      parameters:
+        - name: login
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /projects:
+    get:
+      summary: Get projects for user
+      operationId: getMyProjects
+      tags:
+        - Projects
+      parameters:
+        - name: user
+          in: query
+          required: true
+          schema:
+            type: string
+          description: User login
+      responses:
+        '200':
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+    post:
+      summary: Create new project
+      operationId: createProject
+      tags:
+        - Projects
+      parameters:
+        - name: user
+          in: query
+          required: true
+          schema:
+            type: string
+          description: User login (becomes manager)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectRequest'
+      responses:
+        '201':
+          description: Project created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /projects/{id}:
+    get:
+      summary: Get project by ID
+      operationId: getProjectById
+      tags:
+        - Projects
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Project found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /projects/{id}/members:
+    post:
+      summary: Add member to project
+      operationId: addProjectMember
+      tags:
+        - Projects
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: user
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Actor user login (must be MANAGER)
+        - name: role
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/ProjectRole'
+          description: Actor role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddMemberRequest'
+      responses:
+        '200':
+          description: Member added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /projects/{projectId}/milestones:
+    get:
+      summary: Get milestones for project
+      operationId: getMilestonesByProject
+      tags:
+        - Milestones
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of milestones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Milestone'
+
+    post:
+      summary: Create milestone
+      operationId: createMilestone
+      tags:
+        - Milestones
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: user
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Actor user login (must be MANAGER)
+        - name: role
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/ProjectRole'
+          description: Actor role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMilestoneRequest'
+      responses:
+        '201':
+          description: Milestone created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Milestone'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /milestones/{id}:
+    get:
+      summary: Get milestone by ID
+      operationId: getMilestoneById
+      tags:
+        - Milestones
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Milestone found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Milestone'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      summary: Update milestone status (activate or close)
+      operationId: updateMilestoneStatus
+      tags:
+        - Milestones
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: user
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Actor user login (must be MANAGER)
+        - name: role
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/ProjectRole'
+          description: Actor role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMilestoneStatusRequest'
+      responses:
+        '200':
+          description: Milestone updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Milestone'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /milestones/{milestoneId}/tickets:
+    get:
+      summary: Get tickets for milestone
+      operationId: getTicketsByMilestone
+      tags:
+        - Tickets
+      parameters:
+        - name: milestoneId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of tickets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ticket'
+
+  /tickets:
+    post:
+      summary: Create ticket
+      operationId: createTicket
+      tags:
+        - Tickets
+      parameters:
+        - name: user
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Actor user login (must be MANAGER or TEAM_LEADER)
+        - name: role
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/ProjectRole'
+          description: Actor role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTicketRequest'
+      responses:
+        '201':
+          description: Ticket created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /tickets/{id}:
+    get:
+      summary: Get ticket by ID
+      operationId: getTicketById
+      tags:
+        - Tickets
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Ticket found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      summary: Update ticket (assign or change status)
+      operationId: updateTicket
+      tags:
+        - Tickets
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: user
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Actor user login
+        - name: role
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/ProjectRole'
+          description: Actor role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTicketRequest'
+      responses:
+        '200':
+          description: Ticket updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /my/tickets:
+    get:
+      summary: Get tickets assigned to user
+      operationId: getMyTickets
+      tags:
+        - Tickets
+      parameters:
+        - name: user
+          in: query
+          required: true
+          schema:
+            type: string
+          description: User login
+      responses:
+        '200':
+          description: List of tickets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ticket'
+
+  /projects/{projectId}/bugs:
+    get:
+      summary: Get bugs for project
+      operationId: getBugsByProject
+      tags:
+        - Bugs
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of bug reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BugReport'
+
+  /bugs:
+    post:
+      summary: Create bug report
+      operationId: createBug
+      tags:
+        - Bugs
+      parameters:
+        - name: user
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Reporter user login (must be DEVELOPER, TESTER or TEAM_LEADER)
+        - name: role
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/ProjectRole'
+          description: Actor role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBugRequest'
+      responses:
+        '201':
+          description: Bug report created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BugReport'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /bugs/{id}:
+    get:
+      summary: Get bug report by ID
+      operationId: getBugById
+      tags:
+        - Bugs
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Bug report found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BugReport'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      summary: Update bug report (assign or change status)
+      operationId: updateBug
+      tags:
+        - Bugs
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: user
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Actor user login
+        - name: role
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/ProjectRole'
+          description: Actor role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBugRequest'
+      responses:
+        '200':
+          description: Bug report updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BugReport'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /my/bugs:
+    get:
+      summary: Get bugs assigned to user or needing testing
+      operationId: getMyBugs
+      tags:
+        - Bugs
+      parameters:
+        - name: user
+          in: query
+          required: true
+          schema:
+            type: string
+          description: User login
+        - name: role
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/ProjectRole'
+          description: User role
+      responses:
+        '200':
+          description: List of bug reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BugReport'
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        login:
+          type: string
+          example: joe
+        name:
+          type: string
+          example: Joe Peach
+      required:
+        - login
+        - name
+
+    CreateUserRequest:
+      type: object
+      properties:
+        login:
+          type: string
+          example: joe
+        name:
+          type: string
+          example: Joe Peach
+      required:
+        - login
+        - name
+
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        name:
+          type: string
+          example: ProjName
+        managerLogin:
+          type: string
+          example: joe
+        teamLeaderLogin:
+          type: string
+          nullable: true
+          example: bobs
+        developerLogins:
+          type: array
+          items:
+            type: string
+          example: [bobs, bebs]
+        testerLogins:
+          type: array
+          items:
+            type: string
+          example: [bubs]
+      required:
+        - id
+        - name
+        - managerLogin
+        - developerLogins
+        - testerLogins
+
+    CreateProjectRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: ProjName
+      required:
+        - name
+
+    AddMemberRequest:
+      type: object
+      properties:
+        userLogin:
+          type: string
+          example: bobs
+        role:
+          $ref: '#/components/schemas/ProjectRole'
+      required:
+        - userLogin
+        - role
+
+    ProjectRole:
+      type: string
+      enum:
+        - MANAGER
+        - TEAM_LEADER
+        - DEVELOPER
+        - TESTER
+      example: DEVELOPER
+
+    Milestone:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        projectId:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        name:
+          type: string
+          example: Sprint 1
+        startDate:
+          type: string
+          format: date
+          example: 2025-01-01
+        endDate:
+          type: string
+          format: date
+          example: 2025-01-31
+        status:
+          $ref: '#/components/schemas/MilestoneStatus'
+      required:
+        - id
+        - projectId
+        - name
+        - startDate
+        - endDate
+        - status
+
+    MilestoneStatus:
+      type: string
+      enum:
+        - OPEN
+        - ACTIVE
+        - CLOSED
+      example: OPEN
+
+    CreateMilestoneRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Sprint 1
+        startDate:
+          type: string
+          format: date
+          example: 2025-01-01
+        endDate:
+          type: string
+          format: date
+          example: 2025-01-31
+      required:
+        - name
+        - startDate
+        - endDate
+
+    UpdateMilestoneStatusRequest:
+      type: object
+      properties:
+        action:
+          type: string
+          enum:
+            - activate
+            - close
+          example: activate
+      required:
+        - action
+
+    Ticket:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        projectId:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        milestoneId:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        title:
+          type: string
+          example: Implement user authentication
+        assigneeLogins:
+          type: array
+          items:
+            type: string
+          example: [bobs]
+        status:
+          $ref: '#/components/schemas/TicketStatus'
+      required:
+        - id
+        - projectId
+        - milestoneId
+        - title
+        - assigneeLogins
+        - status
+
+    TicketStatus:
+      type: string
+      enum:
+        - NEW
+        - ACCEPTED
+        - IN_PROGRESS
+        - DONE
+      example: NEW
+
+    CreateTicketRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        milestoneId:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        title:
+          type: string
+          example: Implement user authentication
+      required:
+        - projectId
+        - milestoneId
+        - title
+
+    UpdateTicketRequest:
+      type: object
+      properties:
+        assigneeLogin:
+          type: string
+          nullable: true
+          example: bobs
+        status:
+          $ref: '#/components/schemas/TicketStatus'
+          nullable: true
+      description: Both fields are optional. Provide assigneeLogin to assign, status to change status.
+
+    BugReport:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        projectId:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        title:
+          type: string
+          example: Button not responding
+        reporterLogin:
+          type: string
+          example: bubs
+        assigneeDeveloperLogin:
+          type: string
+          nullable: true
+          example: bobs
+        status:
+          $ref: '#/components/schemas/BugStatus'
+      required:
+        - id
+        - projectId
+        - title
+        - reporterLogin
+        - status
+
+    BugStatus:
+      type: string
+      enum:
+        - NEW
+        - FIXED
+        - TESTED
+        - CLOSED
+      example: NEW
+
+    CreateBugRequest:
+      type: object
+      properties:
+        projectId:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        title:
+          type: string
+          example: Button not responding
+      required:
+        - projectId
+        - title
+
+    UpdateBugRequest:
+      type: object
+      properties:
+        assigneeLogin:
+          type: string
+          nullable: true
+          example: bobs
+        status:
+          $ref: '#/components/schemas/BugStatus'
+          nullable: true
+      description: Both fields are optional. Provide assigneeLogin to assign, status to change status.
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: User already exists - joe
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
