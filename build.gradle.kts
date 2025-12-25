@@ -27,15 +27,9 @@ java {
 }
 
 tasks.withType<JavaCompile>().configureEach {
-    options.compilerArgs.add("--enable-preview")
     options.release.set(24)
 }
 
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
-    jvmArgs("--enable-preview")
-}
-
-tasks.withType<JavaExec>().configureEach {
-    jvmArgs("--enable-preview")
 }

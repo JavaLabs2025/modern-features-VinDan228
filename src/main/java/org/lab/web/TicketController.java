@@ -45,14 +45,12 @@ public class TicketController {
                          @RequestParam String user,
                          @RequestParam ProjectRole role) {
         Ticket result = ticketService.getById(id);
-
-        if (request.assigneeLogin() != null) {
-            result = ticketService.assign(id, request.assigneeLogin(), user, role);
-        }
-        if (request.status() != null) {
-            result = ticketService.setStatus(id, request.status(), user, role);
-        }
-        return result;
+        result = request.assigneeLogin() != null 
+                ? ticketService.assign(id, request.assigneeLogin(), user, role) 
+                : result;
+        return request.status() != null 
+                ? ticketService.setStatus(id, request.status(), user, role) 
+                : result;
     }
 
     @GetMapping("/my/tickets")

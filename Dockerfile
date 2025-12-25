@@ -31,4 +31,4 @@ WORKDIR /app
 COPY --from=build /app/app.jar /app/app.jar
 
 EXPOSE 8080
-ENTRYPOINT ["java", "--enable-preview", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

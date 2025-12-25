@@ -44,10 +44,11 @@ public class MilestoneRepository {
     }
 
     public Optional<Milestone> findById(UUID id) {
-        List<Milestone> result = jdbc.query(
-                "SELECT id, project_id, name, start_date, end_date, status FROM milestones WHERE id = ?",
-                ROW_MAPPER, id);
-        return result.isEmpty() ? Optional.empty() : Optional.of(result.getFirst());
+        return jdbc.query(
+                        "SELECT id, project_id, name, start_date, end_date, status FROM milestones WHERE id = ?",
+                        ROW_MAPPER, id)
+                .stream()
+                .findFirst();
     }
 
     public List<Milestone> findByProjectId(UUID projectId) {
@@ -57,18 +58,18 @@ public class MilestoneRepository {
     }
 
     public boolean hasCurrentMilestone(UUID projectId) {
-        Integer count = jdbc.queryForObject(
-                "SELECT COUNT(*) FROM milestones WHERE project_id = ? AND status IN ('OPEN', 'ACTIVE')",
-                Integer.class, projectId);
-        return count != null && count > 0;
+        return Optional.ofNullable(
+                jdbc.queryForObject(
+                        "SELECT COUNT(*) FROM milestones WHERE project_id = ? AND status IN ('OPEN', 'ACTIVE')",
+                        Integer.class, projectId)
+        ).map(count -> count > 0).orElse(false);
     }
 
     public boolean hasActiveMilestone(UUID projectId, UUID excludeId) {
-        Integer count = jdbc.queryForObject(
-                "SELECT COUNT(*) FROM milestones WHERE project_id = ? AND status = 'ACTIVE' AND id != ?",
-                Integer.class, projectId, excludeId);
-        return count != null && count > 0;
+        return Optional.ofNullable(
+                jdbc.queryForObject(
+                        "SELECT COUNT(*) FROM milestones WHERE project_id = ? AND status = 'ACTIVE' AND id != ?",
+                        Integer.class, projectId, excludeId)
+        ).map(count -> count > 0).orElse(false);
     }
 }
-
-

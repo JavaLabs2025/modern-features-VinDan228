@@ -27,9 +27,9 @@ public record BugReport(
             throw new IllegalArgumentException("reporterLogin must not be blank");
         }
 
-        if (assigneeDeveloperLogin != null && assigneeDeveloperLogin.isBlank()) {
-            assigneeDeveloperLogin = null;
-        }
+        assigneeDeveloperLogin = (assigneeDeveloperLogin != null && assigneeDeveloperLogin.isBlank()) 
+                ? null 
+                : assigneeDeveloperLogin;
 
         if (status == null) {
             throw new IllegalArgumentException("status must not be null");

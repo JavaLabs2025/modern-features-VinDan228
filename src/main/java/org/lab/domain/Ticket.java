@@ -29,11 +29,9 @@ public record Ticket(
             throw new IllegalArgumentException("title must not be blank");
         }
 
-        if (assigneeLogins == null) {
-            assigneeLogins = new LinkedHashSet<>();
-        } else {
-            assigneeLogins = new LinkedHashSet<>(assigneeLogins);
-        }
+        assigneeLogins = assigneeLogins == null 
+                ? new LinkedHashSet<>() 
+                : new LinkedHashSet<>(assigneeLogins);
 
         if (status == null) {
             throw new IllegalArgumentException("status must not be null");

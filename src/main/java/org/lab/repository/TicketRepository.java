@@ -24,43 +24,49 @@ public class TicketRepository {
                 status = EXCLUDED.status
             """, t.id(), t.projectId(), t.milestoneId(), t.title(), t.status().name());
 
-        // Sync assignees
         jdbc.update("DELETE FROM ticket_assignees WHERE ticket_id = ?", t.id());
-        for (String login : t.assigneeLogins()) {
-            jdbc.update("INSERT INTO ticket_assignees (ticket_id, user_login) VALUES (?, ?)", t.id(), login);
-        }
+        t.assigneeLogins().stream()
+                .forEach(login -> jdbc.update(
+                        "INSERT INTO ticket_assignees (ticket_id, user_login) VALUES (?, ?)",
+                        t.id(), login));
     }
 
     public Optional<Ticket> findById(UUID id) {
-        List<Map<String, Object>> rows = jdbc.queryForList(
-                "SELECT id, project_id, milestone_id, title, status FROM tickets WHERE id = ?", id);
-        if (rows.isEmpty()) return Optional.empty();
-        return Optional.of(buildTicket(rows.getFirst()));
+        return jdbc.queryForList(
+                        "SELECT id, project_id, milestone_id, title, status FROM tickets WHERE id = ?", id)
+                .stream()
+                .findFirst()
+                .map(this::buildTicket);
     }
 
     public List<Ticket> findByMilestoneId(UUID milestoneId) {
-        List<Map<String, Object>> rows = jdbc.queryForList(
-                "SELECT id, project_id, milestone_id, title, status FROM tickets WHERE milestone_id = ? ORDER BY title",
-                milestoneId);
-        return rows.stream().map(this::buildTicket).toList();
+        return jdbc.queryForList(
+                        "SELECT id, project_id, milestone_id, title, status FROM tickets WHERE milestone_id = ? ORDER BY title",
+                        milestoneId)
+                .stream()
+                .map(this::buildTicket)
+                .toList();
     }
 
     public List<Ticket> findByAssignee(String userLogin) {
-        List<Map<String, Object>> rows = jdbc.queryForList("""
+        return jdbc.queryForList("""
             SELECT t.id, t.project_id, t.milestone_id, t.title, t.status
             FROM tickets t
             JOIN ticket_assignees ta ON ta.ticket_id = t.id
             WHERE ta.user_login = ?
             ORDER BY t.title
-            """, userLogin);
-        return rows.stream().map(this::buildTicket).toList();
+            """, userLogin)
+                .stream()
+                .map(this::buildTicket)
+                .toList();
     }
 
     public boolean allTicketsDone(UUID milestoneId) {
-        Integer count = jdbc.queryForObject(
-                "SELECT COUNT(*) FROM tickets WHERE milestone_id = ? AND status != 'DONE'",
-                Integer.class, milestoneId);
-        return count == null || count == 0;
+        return Optional.ofNullable(
+                jdbc.queryForObject(
+                        "SELECT COUNT(*) FROM tickets WHERE milestone_id = ? AND status != 'DONE'",
+                        Integer.class, milestoneId)
+        ).map(count -> count == 0).orElse(true);
     }
 
     private Ticket buildTicket(Map<String, Object> row) {
@@ -70,11 +76,11 @@ public class TicketRepository {
         String title = (String) row.get("title");
         TicketStatus status = TicketStatus.valueOf((String) row.get("status"));
 
-        List<String> assignees = jdbc.queryForList(
-                "SELECT user_login FROM ticket_assignees WHERE ticket_id = ?", String.class, id);
+        Set<String> assignees = jdbc.queryForList(
+                        "SELECT user_login FROM ticket_assignees WHERE ticket_id = ?", String.class, id)
+                .stream()
+                .collect(LinkedHashSet::new, LinkedHashSet::add, LinkedHashSet::addAll);
 
-        return new Ticket(id, projectId, milestoneId, title, new LinkedHashSet<>(assignees), status);
+        return new Ticket(id, projectId, milestoneId, title, assignees, status);
     }
 }
-
-

@@ -23,21 +23,17 @@ public record Project(
             throw new IllegalArgumentException("managerLogin must not be blank");
         }
 
-        if (developerLogins == null) {
-            developerLogins = new LinkedHashSet<>();
-        } else {
-            developerLogins = new LinkedHashSet<>(developerLogins);
-        }
+        developerLogins = developerLogins == null 
+                ? new LinkedHashSet<>() 
+                : new LinkedHashSet<>(developerLogins);
 
-        if (testerLogins == null) {
-            testerLogins = new LinkedHashSet<>();
-        } else {
-            testerLogins = new LinkedHashSet<>(testerLogins);
-        }
+        testerLogins = testerLogins == null 
+                ? new LinkedHashSet<>() 
+                : new LinkedHashSet<>(testerLogins);
 
-        if (teamLeaderLogin != null && teamLeaderLogin.isBlank()) {
-            teamLeaderLogin = null;
-        }
+        teamLeaderLogin = (teamLeaderLogin != null && teamLeaderLogin.isBlank()) 
+                ? null 
+                : teamLeaderLogin;
     }
 
     public boolean participates(String login) {

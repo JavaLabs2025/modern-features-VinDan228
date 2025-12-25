@@ -39,10 +39,11 @@ public class BugRepository {
     }
 
     public Optional<BugReport> findById(UUID id) {
-        List<BugReport> result = jdbc.query(
-                "SELECT id, project_id, title, reporter_login, assignee_login, status FROM bug_reports WHERE id = ?",
-                ROW_MAPPER, id);
-        return result.isEmpty() ? Optional.empty() : Optional.of(result.getFirst());
+        return jdbc.query(
+                        "SELECT id, project_id, title, reporter_login, assignee_login, status FROM bug_reports WHERE id = ?",
+                        ROW_MAPPER, id)
+                .stream()
+                .findFirst();
     }
 
     public List<BugReport> findByProjectId(UUID projectId) {
@@ -63,5 +64,3 @@ public class BugRepository {
                 ROW_MAPPER, projectId);
     }
 }
-
-

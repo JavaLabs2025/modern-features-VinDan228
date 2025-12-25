@@ -56,14 +56,17 @@ public class MilestoneService {
         if (ms.status() == MilestoneStatus.CLOSED) {
             throw new DomainException("Milestone is CLOSED");
         }
-        if (ms.status() == MilestoneStatus.ACTIVE) {
-            return ms;
-        }
         if (milestoneRepo.hasActiveMilestone(ms.projectId(), milestoneId)) {
             throw new DomainException("Project already has an ACTIVE milestone");
         }
 
-        Milestone updated = new Milestone(ms.id(), ms.projectId(), ms.name(), ms.startDate(), ms.endDate(), MilestoneStatus.ACTIVE);
+        return ms.status() == MilestoneStatus.ACTIVE 
+                ? ms 
+                : updateMilestoneStatus(ms, MilestoneStatus.ACTIVE);
+    }
+
+    private Milestone updateMilestoneStatus(Milestone ms, MilestoneStatus newStatus) {
+        Milestone updated = new Milestone(ms.id(), ms.projectId(), ms.name(), ms.startDate(), ms.endDate(), newStatus);
         milestoneRepo.save(updated);
         return updated;
     }
@@ -79,9 +82,7 @@ public class MilestoneService {
             throw new DomainException("Cannot close milestone, not all tickets are DONE");
         }
 
-        Milestone updated = new Milestone(ms.id(), ms.projectId(), ms.name(), ms.startDate(), ms.endDate(), MilestoneStatus.CLOSED);
-        milestoneRepo.save(updated);
-        return updated;
+        return updateMilestoneStatus(ms, MilestoneStatus.CLOSED);
     }
 }
 

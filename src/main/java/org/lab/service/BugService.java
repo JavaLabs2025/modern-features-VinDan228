@@ -4,7 +4,6 @@ import org.lab.domain.*;
 import org.lab.repository.BugRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,14 +42,9 @@ public class BugService {
     }
 
     public List<BugReport> getMyBugs(String userLogin, ProjectRole role) {
-        List<BugReport> result = new ArrayList<>();
-
-        // Bugs assigned to me (as developer)
-        if (role == ProjectRole.DEVELOPER || role == ProjectRole.TEAM_LEADER) {
-            result.addAll(bugRepo.findByAssignee(userLogin));
-        }
-
-        return result;
+        return (role == ProjectRole.DEVELOPER || role == ProjectRole.TEAM_LEADER)
+                ? bugRepo.findByAssignee(userLogin)
+                : List.of();
     }
 
     public List<BugReport> getNeedsTesting(UUID projectId) {

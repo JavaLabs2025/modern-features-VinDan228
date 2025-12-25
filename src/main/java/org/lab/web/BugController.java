@@ -45,14 +45,12 @@ public class BugController {
                             @RequestParam String user,
                             @RequestParam ProjectRole role) {
         BugReport result = bugService.getById(id);
-
-        if (request.assigneeLogin() != null) {
-            result = bugService.assign(id, request.assigneeLogin(), user, role);
-        }
-        if (request.status() != null) {
-            result = bugService.setStatus(id, request.status(), user, role);
-        }
-        return result;
+        result = request.assigneeLogin() != null 
+                ? bugService.assign(id, request.assigneeLogin(), user, role) 
+                : result;
+        return request.status() != null 
+                ? bugService.setStatus(id, request.status(), user, role) 
+                : result;
     }
 
     @GetMapping("/my/bugs")

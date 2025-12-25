@@ -27,18 +27,18 @@ public class UserRepository {
     }
 
     public Optional<User> findByLogin(String login) {
-        List<User> result = jdbc.query("SELECT login, name FROM users WHERE login = ?", ROW_MAPPER, login);
-        return result.isEmpty() ? Optional.empty() : Optional.of(result.getFirst());
+        return jdbc.query("SELECT login, name FROM users WHERE login = ?", ROW_MAPPER, login)
+                .stream()
+                .findFirst();
     }
 
     public boolean existsByLogin(String login) {
-        Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM users WHERE login = ?", Integer.class, login);
-        return count != null && count > 0;
+        return Optional.ofNullable(
+                jdbc.queryForObject("SELECT COUNT(*) FROM users WHERE login = ?", Integer.class, login)
+        ).map(count -> count > 0).orElse(false);
     }
 
     public List<User> findAll() {
         return jdbc.query("SELECT login, name FROM users", ROW_MAPPER);
     }
 }
-
-

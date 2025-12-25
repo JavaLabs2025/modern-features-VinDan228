@@ -16,7 +16,7 @@ services:
     command: -p ${POSTGRES_PORT}
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-      # - /private/var/lib/postgres_amx:/var/lib/postgresql
+      - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
     networks:
       - db_net
@@ -73,3 +73,7 @@ networks:
     driver: bridge
   db_net_admin:
     driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

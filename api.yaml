@@ -759,13 +759,16 @@ components:
       type: object
       properties:
         action:
-          type: string
-          enum:
-            - activate
-            - close
-          example: activate
+          $ref: '#/components/schemas/MilestoneAction'
       required:
         - action
+
+    MilestoneAction:
+      type: string
+      enum:
+        - ACTIVATE
+        - CLOSE
+      example: ACTIVATE
 
     Ticket:
       type: object

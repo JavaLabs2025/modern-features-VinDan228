@@ -1,6 +1,7 @@
 package org.lab.web;
 
 import org.lab.domain.Milestone;
+import org.lab.domain.MilestoneAction;
 import org.lab.domain.ProjectRole;
 import org.lab.service.MilestoneService;
 import org.springframework.http.HttpStatus;
@@ -19,7 +20,7 @@ public class MilestoneController {
     }
 
     public record CreateMilestoneRequest(String name, LocalDate startDate, LocalDate endDate) {}
-    public record UpdateStatusRequest(String action) {}
+    public record UpdateStatusRequest(MilestoneAction action) {}
 
     @GetMapping("/projects/{projectId}/milestones")
     public List<Milestone> getByProject(@PathVariable UUID projectId) {
@@ -45,10 +46,9 @@ public class MilestoneController {
                                   @RequestBody UpdateStatusRequest request,
                                   @RequestParam String user,
                                   @RequestParam ProjectRole role) {
-        return switch (request.action().toLowerCase()) {
-            case "activate" -> milestoneService.activate(id, user, role);
-            case "close" -> milestoneService.close(id, user, role);
-            default -> throw new IllegalArgumentException("Unknown action: " + request.action());
+        return switch (request.action()) {
+            case ACTIVATE -> milestoneService.activate(id, user, role);
+            case CLOSE -> milestoneService.close(id, user, role);
         };
     }
 }
